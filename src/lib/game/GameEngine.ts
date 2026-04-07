@@ -24,6 +24,8 @@ export class GameEngine {
     
     // 回呼函數：當分數改變時通知外部
     onScoreUpdate: (amount: number) => void;
+    // 回呼函數：音效事件通知
+    onSfx: ((event: 'reel' | 'catch' | 'score') => void) | null = null;
     
     // 波浪動畫變數
     waveOffset: number = 0;
@@ -120,8 +122,11 @@ export class GameEngine {
         // 2. 處理輸入 (拋竿邏輯)
         // 只有在 idle 狀態下按空白鍵才有效
         if (this.input.cast && (this.hook.state === 'idle' || this.hook.state === 'sinking')) {
-            // 碰撞偵測
             this.hook.reel();
+            // 只有在釣竿真的被拉起（state 確實變成 reeling）時才觸發音效
+            if (this.hook.state === 'reeling') {
+                this.onSfx?.('reel');
+            }
         }
         
         if (this.hook.state === 'reeling') {
@@ -242,6 +247,7 @@ export class GameEngine {
                 const amount = this.hook.caughtFish.length;
                 if (amount > 0) {
                     this.onScoreUpdate(amount);
+                    this.onSfx?.('score');
                 }
                 
                 // 讓魚消失 (重生)
@@ -275,6 +281,8 @@ export class GameEngine {
             ) {
                 // 1. 觸發魚的被抓狀態
                 fish.onCaught(this.hook);
+                // 播放釣到魚音效
+                this.onSfx?.('catch');
                 
                 // 2. 觸發鉤子的狀態 (設定 caughtFish 並開始收線)
                 this.hook.caughtFish.push(fish);
