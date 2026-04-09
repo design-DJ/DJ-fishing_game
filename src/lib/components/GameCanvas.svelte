@@ -14,6 +14,8 @@
 	onMount(() => {
 		// 0. 初始化音訊管理器
 		audio = new AudioManager();
+		audio.setBGMPlaybackRate(0.7);
+		audio.setBGMLoopDelay(800);
 
 		// 1. 初始化引擎
 		engine = new GameEngine(

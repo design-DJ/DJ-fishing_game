@@ -19,6 +19,10 @@ export class AudioManager {
     bgmMuted = false;
     sfxMuted = false;
 
+    // BGM 設定
+    private bgmPlaybackRate: number = 1.0;  // 播放速度
+    private bgmLoopDelay: number = 0;       // 循環延遲（毫秒）
+
     constructor() {
         // 嘗試載入音訊檔案，若 404 則自動回退到合成模式
         this.detectAudioFiles();
@@ -27,10 +31,11 @@ export class AudioManager {
     private detectAudioFiles() {
         // 每個音效獨立嘗試載入，成功才存入，失敗（404）則靜默忽略
         // 有哪個檔案就用哪個，其餘自動回退到合成模式
-        const bgm = new Audio('/audio/bgm.mp3');
+        const bgm = new Audio('/audio/bgm.m4a');
         bgm.addEventListener('canplaythrough', () => {
-            bgm.loop = true;
+            bgm.loop = this.bgmLoopDelay === 0;
             bgm.volume = 0.4;
+            bgm.playbackRate = this.bgmPlaybackRate;
             this.bgmAudio = bgm;
         }, { once: true });
         bgm.load();
@@ -80,6 +85,22 @@ export class AudioManager {
     startBGM() {
         if (this.bgmAudio) {
             this.bgmAudio.volume = this.bgmMuted ? 0 : 0.4;
+            
+            // 根據延遲設置配置循環行為
+            if (this.bgmLoopDelay > 0) {
+                // 有延遲：禁用自動循環，使用 ended 事件
+                this.bgmAudio.loop = false;
+                // 移除舊的 ended 監聽器
+                this.bgmAudio.removeEventListener('ended', this.handleBGMEnded);
+                // 添加新的 ended 監聽器
+                this.bgmAudio.addEventListener('ended', this.handleBGMEnded);
+            } else {
+                // 無延遲：啟用自動循環
+                this.bgmAudio.loop = true;
+                this.bgmAudio.removeEventListener('ended', this.handleBGMEnded);
+            }
+            
+            this.bgmPlaying = true;
             this.bgmAudio.play().catch(() => {});
             return;
         }
@@ -98,6 +119,8 @@ export class AudioManager {
         if (this.bgmAudio) {
             this.bgmAudio.pause();
             this.bgmAudio.currentTime = 0;
+            this.bgmAudio.removeEventListener('ended', this.handleBGMEnded);
+            this.bgmPlaying = false;
             return;
         }
         // --- 合成模式 ---
@@ -345,5 +368,55 @@ export class AudioManager {
             this.actx.close();
             this.actx = null;
         }
+    }
+
+    // ─── BGM 調整方法 ──────────────────────────────────────
+    
+    /** 設定 BGM 播放速度（0.25 ~ 2.0） */
+    setBGMPlaybackRate(rate: number) {
+        this.bgmPlaybackRate = Math.max(0.25, Math.min(2.0, rate));
+        if (this.bgmAudio) {
+            this.bgmAudio.playbackRate = this.bgmPlaybackRate;
+        }
+    }
+
+    /** 設定 BGM 循環延遲（毫秒） */
+    setBGMLoopDelay(delayMs: number) {
+        this.bgmLoopDelay = Math.max(0, delayMs);
+        
+        // 若音頻正在播放，立即應用新設置
+        if (this.bgmAudio && this.bgmPlaying) {
+            if (this.bgmLoopDelay > 0) {
+                // 啟用延遲循環
+                this.bgmAudio.loop = false;
+                this.bgmAudio.removeEventListener('ended', this.handleBGMEnded);
+                this.bgmAudio.addEventListener('ended', this.handleBGMEnded);
+            } else {
+                // 禁用延遲，使用自動循環
+                this.bgmAudio.removeEventListener('ended', this.handleBGMEnded);
+                this.bgmAudio.loop = true;
+            }
+        }
+    }
+
+    /** BGM 結束事件處理器 */
+    private handleBGMEnded = () => {
+        if (!this.bgmAudio || !this.bgmPlaying) return;
+        setTimeout(() => {
+            if (this.bgmAudio && this.bgmPlaying) {
+                this.bgmAudio.currentTime = 0;
+                this.bgmAudio.play().catch(() => {});
+            }
+        }, this.bgmLoopDelay);
+    };
+
+    /** 取得播放速度 */
+    getBGMPlaybackRate(): number {
+        return this.bgmPlaybackRate;
+    }
+
+    /** 取得循環延遲 */
+    getBGMLoopDelay(): number {
+        return this.bgmLoopDelay;
     }
 }
