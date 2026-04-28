@@ -30,7 +30,7 @@
 		>
 			<div class="text-center">
 				<div class="text-8xl mb-2">🎣</div>
-				<h1 class="text-5xl font-black text-blue-800 mb-2">晴天釣魚</h1>
+				<h1 class="text-5xl font-black text-blue-800 mb-2">賈好嘉釣魚</h1>
 				<p class="text-gray-500 text-base">釣魚入籃加分！60 秒內釣越多越好！</p>
 			</div>
 
