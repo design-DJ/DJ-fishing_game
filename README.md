@@ -69,7 +69,7 @@ flowchart TD
 # 其他說明
 - 遊戲圖片靜態資源放在 static目錄中
 - 在專案根目錄中可使用 `npm run dev`指令啟動熱加載做開發測試，預設 port為 5173
-- 進入遊戲後台密碼為 `minority`
+- 進入遊戲後台密碼為 `jbj`
 
 # 部屬方式
 - 目前使用 vercel部屬專案
