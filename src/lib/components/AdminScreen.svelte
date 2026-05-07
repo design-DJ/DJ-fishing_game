@@ -11,7 +11,7 @@
 	let flashMessage = $state('');
 
 	function handleLogin() {
-		if (password === 'minority') {
+		if (password === 'jbj') {
 			authenticated = true;
 			durationInput = game.gameDuration;
 			fishCountInput = game.fishCount;
